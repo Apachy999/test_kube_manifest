@@ -1,0 +1,1 @@
+# test_kube_manifest
