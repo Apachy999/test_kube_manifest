@@ -1,0 +1,277 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-cluster
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: test-cluster
+  name: app-server
+  labels:
+    app: nginx-sonarr-radarr
+    env: prod
+    owner: apachy999
+spec:
+#  replicas: 2
+  selector:
+    matchLabels:
+      project: homework9
+  template:
+    metadata:
+      labels:
+        project: homework9     #Service will look for those Pods labels
+    spec:
+      containers:
+      - name: homework9-web
+        image: nginx
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 80m
+            memory: 80Mi
+        volumeMounts:
+        - name: persistent-storage
+          mountPath: "/usr/share/nginx/html"
+      volumes:
+      - name: persistent-storage
+        persistentVolumeClaim:
+          claimName: html-claim
+
+---
+
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  namespace: test-cluster
+  name: my-autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v2beta1v1
+    kind: Deployment
+    name: app-server
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: 800
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: test-cluster
+  name: app-sonarr
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: sonarr
+  template:
+    metadata:
+      labels:
+        project: sonarr
+    spec:
+      containers:
+        - name: sonarr
+          image: linuxserver/sonarr
+          ports:
+            - containerPort: 8989
+          resources:
+            requests:
+              cpu: 50m
+              memory: 50Mi
+            limits:
+              cpu: 200m
+              memory: 200Mi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: test-cluster
+  name: app-radarr
+  labels:
+    app: radarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: radarr
+  template:
+    metadata:
+      labels:
+        project: radarr
+    spec:
+      containers:
+        - name: radarr
+          image: linuxserver/radarr
+          ports:
+            - containerPort: 7878
+          resources:
+            requests:
+              cpu: 50m
+              memory: 50Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test-cluster
+  name: nginx-service
+  labels:
+    env: prod
+    owner: apachy999
+    run: nginx-service
+spec:
+  type: LoadBalancer
+  selector:
+    project: homework9    #Selecting Pods with those labels
+  ports:
+    - name: nginx-listener
+      protocol: TCP
+      port: 80    #Port on  LoadBalancer
+      targetPort: 80       #Port on Pod
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test-cluster
+  name: sonarr-service
+  labels:
+    run: sonarr-service
+spec:
+  type: LoadBalancer
+  selector:
+    project: sonarr
+  ports:
+    - name: sonarr-listener
+      protocol: TCP
+      port: 8989
+      targetPort: 8989
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test-cluster
+  name: radarr-service
+  labels:
+    run: radarr-service
+spec:
+  type: LoadBalancer
+  selector:
+    project: radarr
+  ports:
+    - name: radarr-listener
+      protocol: TCP
+      port: 7878
+      targetPort: 7878
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: test-cluster
+  name: ingress-hosts
+spec:
+  defaultBackend:
+    service:
+      name: default-http-backend
+      port:
+        number: 80
+  rules:
+  - host: nginx.k8s-5.sa
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+  - host: sonarr.k8s-5.sa
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sonarr-service
+            port:
+              number: 8989
+  - host: radarr.k8s-5.sa
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: radarr-service
+            port:
+              number: 7878
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: test-cluster
+  name: html-volume
+  labels:
+    type: nfs
+    name: html-nfs-volume
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /mnt/IT-Academy/nfs-data/sa2-16-21/Burmeistser
+    server: 192.168.37.105
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: test-cluster
+  name: html-claim
+  labels:
+    app: nginx-sonarr-radarr
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      type: nfs
+      name: html-nfs-volume
