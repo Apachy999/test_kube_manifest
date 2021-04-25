@@ -9,9 +9,6 @@ pipeline {
         }
     }
   }
-  
-
-  
   stages {
       
       
@@ -32,24 +29,22 @@ pipeline {
               
               echo \$?
               
-            """              
+            """                    
           }
       }
     }
-    
     stage ('groovy'){
       steps{
         container('manifest-test'){
-        script{
-           class FileExample {
-              static void main(String[] args) {
-                 new File("fixtures").eachFileMatch(~/.*.yaml/) { file ->
-                    println file.getName()
-      
-                 }
-              }
-   }
-}
+          script{ 
+              for (f in fixtures) {
+                        dir("fixtures/${f}") {
+                                        sh """
+                                            ls ${f}
+                                        """
+                                        }
+                                }
+          } 
         }
       }
     }
