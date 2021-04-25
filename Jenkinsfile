@@ -20,11 +20,7 @@ pipeline {
       }
     }   
     
-    
-               class FileExample {
-                 static void main(String[] args) {
-                   new File("fixtures").eachFileMatch(~/.*.txt/) { file ->
-                      println file.getName()   
+
     
     stage('check') {
       steps {
