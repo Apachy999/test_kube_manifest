@@ -20,32 +20,20 @@ pipeline {
       }
     }   
     
-    stage('Checking GIT manifests') {
+    stage('check') {
       steps {
           container('manifest-test'){
             sh """#!/bin/sh 
             
-              kubeval --openshift fixtures/* >> kubeval_list
-
+              kubeval --openshift fixtures/*
               
-            """                    
+            """  
+              
+            
           }
       }
     }
-    
+      
  
   }
-  
-  post ('Notification') {
-            success {
-                slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-                slackUploadFile channel: "#apachy999-", filePath: "kubeval_list"
-            }
-            failure {
-                slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-                slackUploadFile channel: "#apachy999-", filePath: "kubeval_list"
-
-            }
-    }  
-  
 }
