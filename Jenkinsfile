@@ -25,9 +25,8 @@ pipeline {
           container('manifest-test'){
             sh """#!/bin/sh 
             
-              kubeval --openshift fixtures/*
-              
-              echo \$?
+              kubeval --openshift fixtures/* >> kubeval_list
+
               
             """                    
           }
