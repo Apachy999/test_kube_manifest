@@ -35,7 +35,7 @@ pipeline {
     }
     stage ('groovy'){
       steps{
-        container('manifest-test'){
+    
           script{ 
               for (f in fixtures) {
                         dir("fixtures/${f}") {
@@ -45,7 +45,7 @@ pipeline {
                                         }
                                 }
           } 
-        }
+        
       }
     }
  
