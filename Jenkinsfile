@@ -32,14 +32,24 @@ pipeline {
               
               echo \$?
               
-            """  
-      
-
-            
+            """              
           }
       }
     }
-      
+    
+    stage ('groovy'){
+      steps{
+        script{
+           class FileExample {
+              static void main(String[] args) {
+                 new File("fixtures").eachFileMatch(~/.*.yaml/) { file ->
+                    println file.getName()
+      }
+   }
+}
+        }
+      }
+    }
  
   }
   
