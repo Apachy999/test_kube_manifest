@@ -33,21 +33,7 @@ pipeline {
           }
       }
     }
-    stage ('groovy'){
-      steps{
     
-          script{ 
-              for (f in fixtures) {
-                        dir("fixtures/${f}") {
-                                        sh """
-                                            ls ${f}
-                                        """
-                                        }
-                                }
-          } 
-        
-      }
-    }
  
   }
   
