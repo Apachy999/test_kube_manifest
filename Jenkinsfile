@@ -1,4 +1,9 @@
 pipeline {
+    
+ // triggers { 
+   //     cron('H/10 * * * *')
+//    }
+    
   agent {
     kubernetes {
         containerTemplate {
@@ -11,7 +16,9 @@ pipeline {
   }
   
 
-  stages {         
+  stages {
+      
+      
     stage('Cloning Git') {
       steps {
           container('manifest-test'){
@@ -21,31 +28,38 @@ pipeline {
       }
     }   
     
-    stage('check') {
+    stage('Checking GIT manifests') {
       steps {
           container('manifest-test'){
-            sh """#!/bin/sh 
+
+             sh """#!/bin/sh 
+             kubeval --openshift fixtures/* > kubeval_list.txt
+           
+            res="\$(sed '/^PASS/d'  kubeval_list.txt)"
             
-              kubeval --openshift fixtures/*
-              
-            """  
-              
+            echo \$res
+         
+            """ 
             
           }
       }
     }
-      
+    
+
+ 
   }
   
   post ('Notification') {
-            success {
-                slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})  " )
-              //  slackUploadFile channel: "#apachy999-", filePath: "kubeval_list.txt"
+           success {
+              
+                slackSend (color: '#00FF00', message: " kubeval_list.txt SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}) " )
+                
                
             }
             failure {
                 slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}) ")
-            }           
+            }
+            
     }  
   
 }
