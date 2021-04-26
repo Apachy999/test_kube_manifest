@@ -26,9 +26,6 @@ pipeline {
           container('manifest-test'){
             sh """#!/bin/sh 
              kubeval --openshift fixtures/* 
-             // >> kubeval_list.txt
-             //res="\$(sed '/^PASS/d'  kubeval_list.txt)"
-            // echo \$res
          
             """                     
           }
