@@ -21,13 +21,16 @@ pipeline {
       }
     }   
     
-    stage('Checking GIT manifests') {
+    stage('check') {
       steps {
           container('manifest-test'){
             sh """#!/bin/sh 
-             kubeval --openshift fixtures/* 
-         
-            """                     
+            
+              kubeval --openshift fixtures/*
+              
+            """  
+              
+            
           }
       }
     }
