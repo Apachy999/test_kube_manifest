@@ -11,9 +11,7 @@ pipeline {
   }
   
 
-  stages {
-      
-      
+  stages {         
     stage('Cloning Git') {
       steps {
           container('manifest-test'){
@@ -27,32 +25,27 @@ pipeline {
       steps {
           container('manifest-test'){
             sh """#!/bin/sh 
-             kubeval --openshift fixtures/* >> kubeval_list.txt
-           
-            res="\$(sed '/^PASS/d'  kubeval_list.txt)"
-            
-            echo \$res
+             kubeval --openshift fixtures/* 
+             // >> kubeval_list.txt
+             //res="\$(sed '/^PASS/d'  kubeval_list.txt)"
+            // echo \$res
          
-            """  
-              
-            
+            """                     
           }
       }
     }
       
- 
   }
   
   post ('Notification') {
             success {
                 slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})  " )
-                slackUploadFile channel: "#apachy999-", filePath: "kubeval_list.txt"
+              //  slackUploadFile channel: "#apachy999-", filePath: "kubeval_list.txt"
                
             }
             failure {
                 slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}) ")
-            }
-            
+            }           
     }  
   
 }
